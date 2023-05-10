@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct installment
 {
@@ -79,6 +80,58 @@ void readCustomers(customer **customers){
 }
 
 
+void readLoans(customer **customers){
+    FILE *fp = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\loans.txt", "r");
+    if (fp == NULL)
+    {
+        printf("File could not be opened\n");
+        return;
+    }
+    customer *temp = *customers;
+    
+    while (!feof(fp))
+    {
+        char name[20], surname[30], type[30], processdate[11];
+        float totalamount;
+        int totalinstallmentnum;
+        fscanf(fp, "%s %s %s %f %d %s", name, surname, type, &totalamount, &totalinstallmentnum, processdate);
+        while (temp != NULL)
+        {
+            if (strcmp(temp->name, name) == 0 && strcmp(temp->surname, surname) == 0)
+            {
+                if (temp->loanptr == NULL)
+                {
+                    temp->loanptr = (loan *)malloc(sizeof(loan));
+                    strcpy(temp->loanptr->loanid, strcat(strcat(itoa(temp->customerid, temp->loanptr->loanid, 10), "L"), "1"));
+                    strcpy(temp->loanptr->type, type);
+                    temp->loanptr->totalamount = totalamount;
+                    temp->loanptr->totalinstallmentnum = totalinstallmentnum;
+                    strcpy(temp->loanptr->processdate, processdate);
+                    temp->loanptr->nextloan = NULL;
+                    temp->loanptr->insptr = NULL;
+                }
+                else
+                {
+                    loan *temp2 = temp->loanptr;
+                    while (temp2->nextloan != NULL)
+                    {
+                        temp2 = temp2->nextloan;
+                    }
+                    temp2->nextloan = (loan *)malloc(sizeof(loan));
+                    strcpy(temp2->nextloan->loanid, strcat(strcat(itoa(temp->customerid, temp2->nextloan->loanid, 10), "L"), itoa(temp2->totalinstallmentnum + 1, temp2->nextloan->loanid, 10)));
+                    strcpy(temp2->nextloan->type, type);
+                    temp2->nextloan->totalamount = totalamount;
+                    temp2->nextloan->totalinstallmentnum = totalinstallmentnum;
+                    strcpy(temp2->nextloan->processdate, processdate);
+                    temp2->nextloan->nextloan = NULL;
+                    temp2->nextloan->insptr = NULL;
+                }
+            }
+            temp = temp->nextcust;
+        }
+        temp = *customers;
+    }
+}
 
 
 
@@ -93,6 +146,23 @@ void printCustomers(customer *customers){
     {
         printf("-----------------------------------------------\n");
         printf("%d - %s %s - type : %s - total debt : %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+        customers = customers->nextcust;
+    }
+}
+/*printLoans function is called to iterate through the linked list and print the loan related information.   
+*/
+void printLoans(customer *customers){
+    
+    while (customers != NULL)
+    {
+        printf("-----------------------------------------------\n");
+        printf("%d - %s %s - type : %s - total debt : %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+        loan *temp = customers->loanptr;
+        while (temp != NULL)
+        {
+            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
+            temp = temp->nextloan;
+        }
         customers = customers->nextcust;
     }
 }
@@ -130,12 +200,15 @@ int main()
             break;
         case 3:
             // readLoans function call here
+            readLoans(&customers);
             break;
         case 4:
             // printLoans function call here
+            printLoans(customers);
             break;
         case 5:
             // createInstallments function call here
+            createInstallments(customers);
             break;
         case 6:
             // printInstallments function call here
