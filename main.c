@@ -133,6 +133,40 @@ void readLoans(customer **customers){
     }
 }
 
+void printInstallments(customer *customers){
+    
+    while (customers != NULL)
+    {
+        printf("-----------------------------------------------\n");
+        printf("%d - %s %s - type : %s - total debt : %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+        loan *temp = customers->loanptr;
+        while (temp != NULL)
+        {
+            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
+            installment *temp2 = temp->insptr;
+            while (temp2 != NULL)
+            {
+                printf("\t\t%s -> %s - %.2f - ", temp2->insid, temp2->installmentdate, temp2->amount);
+                if (temp2->ispaid == 0)
+                {
+                    printf("To be Paid\n");
+                }
+                else if (temp2->ispaid == 1)
+                {
+                    printf("Paid\n");
+                }
+                else
+                {
+                    printf("Delayed Payment\n");
+                }
+                temp2 = temp2->nextins;
+            }
+            temp = temp->nextloan;
+        }
+        customers = customers->nextcust;
+    }
+
+}
 
 
 /*printCustomers function is called and the customers linked list is traversed and name,
@@ -165,6 +199,88 @@ void printLoans(customer *customers){
         }
         customers = customers->nextcust;
     }
+}
+
+
+
+void createInstallments(customer *customers){
+    while (customers != NULL)
+    {
+        loan *temp = customers->loanptr;
+        while (temp != NULL)
+        {
+            if (temp->insptr == NULL)
+            {
+                temp->insptr = (installment *)malloc(sizeof(installment));
+                strcpy(temp->insptr->insid, strcat(strcat(temp->loanid, "I"), "1"));
+                temp->insptr->ispaid = 0;
+                strcpy(temp->insptr->installmentdate, temp->processdate);
+                temp->insptr->amount = temp->totalamount / temp->totalinstallmentnum;
+                temp->insptr->nextins = NULL;
+            }
+            else
+            {
+                installment *temp2 = temp->insptr;
+                while (temp2->nextins != NULL)
+                {
+                    temp2 = temp2->nextins;
+                }
+                temp2->nextins = (installment *)malloc(sizeof(installment));
+                strcpy(temp2->nextins->insid, strcat(strcat(temp->loanid, "I"), itoa(temp2->insid + 1, temp2->nextins->insid, 10)));
+                temp2->nextins->ispaid = 0;
+                strcpy(temp2->nextins->installmentdate, temp->processdate);
+                temp2->nextins->amount = temp->totalamount / temp->totalinstallmentnum;
+                temp2->nextins->nextins = NULL;
+            }
+            temp = temp->nextloan;
+
+        }
+
+        customers = customers->nextcust;
+    }
+}
+
+
+void readPayments(customer *customers){
+
+    FILE *fp = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\payments.txt", "r");
+    if (fp == NULL)
+    {
+        printf("File could not be opened.\n");
+        return;
+    }
+    char line[100];
+    while (fgets(line, 100, fp) != NULL)
+    {
+        char *token = strtok(line, " ");
+        char *loanid = token;
+        token = strtok(NULL, " ");
+        char *insid = token;
+        while (customers != NULL)
+        {
+            loan *temp = customers->loanptr;
+            while (temp != NULL)
+            {
+                if (strcmp(temp->loanid, loanid) == 0)
+                {
+                    installment *temp2 = temp->insptr;
+                    while (temp2 != NULL)
+                    {
+                        if (strcmp(temp2->insid, insid) == 0)
+                        {
+                            temp2->ispaid = 1;
+                            break;
+                        }
+                        temp2 = temp2->nextins;
+                    }
+                    break;
+                }
+                temp = temp->nextloan;
+            }
+            customers = customers->nextcust;
+        }
+    }
+    fclose(fp);
 }
 
 
@@ -212,9 +328,11 @@ int main()
             break;
         case 6:
             // printInstallments function call here
+            printInstallments(customers);
             break;
         case 7:
             // readPayments function call here
+            readPayments(customers);
             break;
         case 8:
             // findUnpaidInstallments function call here
