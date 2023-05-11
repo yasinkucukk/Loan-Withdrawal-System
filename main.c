@@ -95,13 +95,15 @@ void readLoans(customer **customers){
         float totalamount;
         int totalinstallmentnum;
         fscanf(fp, "%s %s %s %f %d %s", name, surname, type, &totalamount, &totalinstallmentnum, processdate);
+        int count = 2;
+		char countStr[50];
         while (temp != NULL)
         {
             if (strcmp(temp->name, name) == 0 && strcmp(temp->surname, surname) == 0)
             {
                 if (temp->loanptr == NULL)
                 {
-                    temp->loanptr = (loan *)malloc(sizeof(loan));
+                    temp->loanptr = (loan *)malloc(sizeof(loan));    
                     strcpy(temp->loanptr->loanid, strcat(strcat(itoa(temp->customerid, temp->loanptr->loanid, 10), "L"), "1"));
                     strcpy(temp->loanptr->type, type);
                     temp->loanptr->totalamount = totalamount;
@@ -109,23 +111,24 @@ void readLoans(customer **customers){
                     strcpy(temp->loanptr->processdate, processdate);
                     temp->loanptr->nextloan = NULL;
                     temp->loanptr->insptr = NULL;
-                }
+               }
                 else
                 {
                     loan *temp2 = temp->loanptr;
                     while (temp2->nextloan != NULL)
                     {
                         temp2 = temp2->nextloan;
+                        count++;
                     }
-                    temp2->nextloan = (loan *)malloc(sizeof(loan));
-                    strcpy(temp2->nextloan->loanid, strcat(strcat(itoa(temp->customerid, temp2->nextloan->loanid, 10), "L"), itoa(temp2->totalinstallmentnum + 1, temp2->nextloan->loanid, 10)));
+                    temp2->nextloan = (loan *)malloc(sizeof(loan));        
+                    strcpy(temp2->nextloan->loanid, strcat(strcat(itoa(temp->customerid, temp2->nextloan->loanid, 10), "L"), itoa(count, countStr, 10)));
                     strcpy(temp2->nextloan->type, type);
                     temp2->nextloan->totalamount = totalamount;
                     temp2->nextloan->totalinstallmentnum = totalinstallmentnum;
                     strcpy(temp2->nextloan->processdate, processdate);
                     temp2->nextloan->nextloan = NULL;
-                    temp2->nextloan->insptr = NULL;
-                }
+                    temp2->nextloan->insptr = NULL;  
+                }           
             }
             temp = temp->nextcust;
         }
