@@ -215,7 +215,9 @@ void createInstallments(customer *customers){
             if (temp->insptr == NULL)
             {
                 temp->insptr = (installment *)malloc(sizeof(installment));
-                strcpy(temp->insptr->insid, strcat(strcat(temp->loanid, "I"), "1"));
+                char id[50];
+                strcpy(id , temp ->loanid);
+                strcpy(temp->insptr->insid, strcat(strcat(id, "I"), "1"));
                 temp->insptr->ispaid = 0;
                 strcpy(temp->insptr->installmentdate, temp->processdate);
                 temp->insptr->amount = temp->totalamount / temp->totalinstallmentnum;
@@ -229,7 +231,9 @@ void createInstallments(customer *customers){
                     temp2 = temp2->nextins;
                 }
                 temp2->nextins = (installment *)malloc(sizeof(installment));
-                strcpy(temp2->nextins->insid, strcat(strcat(temp->loanid, "I"), itoa(temp2->insid + 1, temp2->nextins->insid, 10)));
+                char id[50];
+                strcpy(id , temp ->loanid);
+                strcpy(temp2->nextins->insid, strcat(strcat(id, "I"), itoa(temp2->insid + 1, temp2->nextins->insid, 10)));
                 temp2->nextins->ispaid = 0;
                 strcpy(temp2->nextins->installmentdate, temp->processdate);
                 temp2->nextins->amount = temp->totalamount / temp->totalinstallmentnum;
