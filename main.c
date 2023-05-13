@@ -207,42 +207,71 @@ void printLoans(customer *customers){
 
 
 void createInstallments(customer *customers){
+    int count = 1;
+	char countStr[50];
     while (customers != NULL)
     {
         loan *temp = customers->loanptr;
         while (temp != NULL)
         {
-            if (temp->insptr == NULL)
+            char tempdate[20];
+            strcpy(tempdate, temp->processdate);
+            char *token = strtok(tempdate, "/");
+            int day = atoi(token);
+            token = strtok(NULL, "/");
+            int month = atoi(token);
+            token = strtok(NULL, "/");
+            int year = atoi(token);
+            int totaldays = 30 * temp->totalinstallmentnum;
+  
+            while (day <= totaldays)
             {
-                temp->insptr = (installment *)malloc(sizeof(installment));
-                char id[50];
-                strcpy(id , temp ->loanid);
-                strcpy(temp->insptr->insid, strcat(strcat(id, "I"), "1"));
-                temp->insptr->ispaid = 0;
-                strcpy(temp->insptr->installmentdate, temp->processdate);
-                temp->insptr->amount = temp->totalamount / temp->totalinstallmentnum;
-                temp->insptr->nextins = NULL;
-            }
-            else
-            {
-                installment *temp2 = temp->insptr;
-                while (temp2->nextins != NULL)
+                if (temp->insptr == NULL)
                 {
-                    temp2 = temp2->nextins;
+                    temp->insptr = (installment *)malloc(sizeof(installment));
+                    char id[50];
+                	strcpy(id , temp ->loanid);
+                    strcpy(temp->insptr->insid, strcat(strcat(id, "I"), itoa(count, countStr, 10)));
+                    strcpy(temp->insptr->installmentdate, temp->processdate);
+                    temp->insptr->amount = temp->totalamount / temp->totalinstallmentnum;
+                    temp->insptr->ispaid = 0;
+                    temp->insptr->nextins = NULL;
                 }
-                temp2->nextins = (installment *)malloc(sizeof(installment));
-                char id[50];
-                strcpy(id , temp ->loanid);
-                strcpy(temp2->nextins->insid, strcat(strcat(id, "I"), itoa(temp2->insid + 1, temp2->nextins->insid, 10)));
-                temp2->nextins->ispaid = 0;
-                strcpy(temp2->nextins->installmentdate, temp->processdate);
-                temp2->nextins->amount = temp->totalamount / temp->totalinstallmentnum;
-                temp2->nextins->nextins = NULL;
+                else
+                {
+                    installment *temp2 = temp->insptr;
+                    while (temp2->nextins != NULL)
+                    {
+                        temp2 = temp2->nextins;
+                    }
+                  
+                 	count++;
+                    temp2->nextins = (installment *)malloc(sizeof(installment));
+                    char id[50];
+                	strcpy(id , temp ->loanid);
+                    strcpy(temp2->nextins->insid, strcat(strcat(id, "I"), itoa(count, countStr, 10)));
+                    strcpy(temp2->nextins->installmentdate, temp->processdate);
+                    temp2->nextins->amount = temp->totalamount / temp->totalinstallmentnum;
+                    temp2->nextins->ispaid = 0;
+                    temp2->nextins->nextins = NULL;
+                
+                }
+                day += 30;
+                month++;
+
+                if (month > 12)
+                {
+                    month = 1;
+                    year++;
+                }
+                
+                sprintf(tempdate, "%d/%d/%d", (day %30), month, year);
+                strcpy(temp->processdate, tempdate);
             }
+			count = 1;
             temp = temp->nextloan;
-
         }
-
+  		
         customers = customers->nextcust;
     }
 }
