@@ -49,7 +49,7 @@ void readCustomers(customer **customers){
     if (fp == NULL)
     {
         printf("File could not be opened\n");
-        return;
+        exit(1);
     }
     customer *temp = *customers;
     while (!feof(fp))
@@ -85,7 +85,7 @@ void readLoans(customer **customers){
     if (fp == NULL)
     {
         printf("File could not be opened\n");
-        return;
+        exit(1);
     }
     customer *temp = *customers;
     
@@ -276,47 +276,143 @@ void createInstallments(customer *customers){
     }
 }
 
+/*This function updates the ispaid field as 1 of the paid installments read from the file. 
+payments.txt file For example, "9L1 ALL" means all installments of loan 9L1 are paid. In addition, "1L1 4" means fourth installment of loan 1L1 is paid.
+example payments.txt file
+id of the loan and which installment of the loan is paid.
+9L1 ALL 
+1L1 4
+1L1 1
+1L1 2
 
-void readPayments(customer *customers){
+use fscanf
+*/
 
-    FILE *fp = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\payments.txt", "r");
-    if (fp == NULL)
+void readPayments(customer *customers)
+{
+
+    FILE *fptr;
+    fptr = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\payments.txt", "r");
+    if (fptr == NULL)
     {
-        printf("File could not be opened.\n");
-        return;
+        printf("Error!");
+        exit(1);
     }
-    char line[100];
-    while (fgets(line, 100, fp) != NULL)
+    char loanid[50];
+    char installmentid[50];
+    while (!feof(fptr))
     {
-        char *token = strtok(line, " ");
-        char *loanid = token;
-        token = strtok(NULL, " ");
-        char *insid = token;
-        while (customers != NULL)
+        fscanf(fptr, "%s %s", loanid, installmentid);
+        customer *temp = customers;
+        while (temp != NULL)
         {
-            loan *temp = customers->loanptr;
-            while (temp != NULL)
+            loan *temp2 = temp->loanptr;
+            while (temp2 != NULL)
             {
-                if (strcmp(temp->loanid, loanid) == 0)
+                if (strcmp(temp2->loanid, loanid) == 0)
                 {
-                    installment *temp2 = temp->insptr;
-                    while (temp2 != NULL)
+                    installment *temp3 = temp2->insptr;
+                    while (temp3 != NULL)
                     {
-                        if (strcmp(temp2->insid, insid) == 0)
+                        if (strcmp(temp3->insid, installmentid) == 0)
                         {
-                            temp2->ispaid = 1;
-                            break;
+                            temp3->ispaid = 1;
+                            temp->totaldebt -= temp3->amount;
                         }
-                        temp2 = temp2->nextins;
+                        temp3 = temp3->nextins;
                     }
-                    break;
                 }
-                temp = temp->nextloan;
+                temp2 = temp2->nextloan;
             }
-            customers = customers->nextcust;
+            temp = temp->nextcust;
         }
     }
-    fclose(fp);
+    fclose(fptr);
+    
+
+}
+    
+
+void findUnpaidInstallments(customer *customers){
+    
+    char date[20];
+    printf("Enter a date: ");
+    scanf("%s", date);
+    customer *temp = customers;
+    while (temp != NULL)
+    {
+        loan *temp2 = temp->loanptr;
+        while (temp2 != NULL)
+        {
+            installment *temp3 = temp2->insptr;
+            while (temp3 != NULL)
+            {
+                if (strcmp(temp3->installmentdate, date) < 0 && temp3->ispaid == 0)
+                {
+                    temp3->ispaid = 2;
+                }
+                temp3 = temp3->nextins;
+            }
+            temp2 = temp2->nextloan;
+        }
+        temp = temp->nextcust;
+    }
+    temp = customers;
+    while (temp != NULL)
+    {
+        loan *temp2 = temp->loanptr;
+        float debt = 0;
+        int count = 0;
+        while (temp2 != NULL)
+        {
+            installment *temp3 = temp2->insptr;
+            while (temp3 != NULL)
+            {
+                if (temp3->ispaid == 2)
+                {
+                    debt += temp3->amount;
+                    count++;
+                }
+                temp3 = temp3->nextins;
+            }
+            temp2 = temp2->nextloan;
+        }
+        if (count != 0)
+        {
+            printf("%s %s : Debt %.2f Number of Delayed Installments %d\n", temp->name, temp->surname, debt, count);
+        }
+        temp = temp->nextcust;
+    }
+}
+
+
+
+void deletePaidInstallments(customer *customers)
+{
+    customer *temp = customers;
+    while (temp != NULL)
+    {
+        loan *temp2 = temp->loanptr;
+        while (temp2 != NULL)
+        {
+            installment *temp3 = temp2->insptr;
+            while (temp3 != NULL)
+            {
+                if (temp3->ispaid == 1)
+                {
+                    installment *temp4 = temp3;
+                    temp3 = temp3->nextins;
+                    free(temp4);
+                }
+                else
+                {
+                    temp3 = temp3->nextins;
+                }
+            }
+            temp2 = temp2->nextloan;
+        }
+        temp = temp->nextcust;
+    }
 }
 
 
@@ -372,9 +468,11 @@ int main()
             break;
         case 8:
             // findUnpaidInstallments function call here
+            findUnpaidInstallments(customers);
             break;
         case 9:
-            // DeletePaidInstallments function call here
+            // deletePaidInstallments function call here
+            deletePaidInstallments(customers);
             break;
         case 0:
             break;
