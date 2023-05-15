@@ -295,7 +295,7 @@ void readPayments(customer *customers)
     fptr = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\payments.txt", "r");
     if (fptr == NULL)
     {
-        printf("Error!");
+        printf("File could not be opened\n");
         exit(1);
     }
     char loanid[50];
@@ -314,11 +314,17 @@ void readPayments(customer *customers)
                     installment *temp3 = temp2->insptr;
                     while (temp3 != NULL)
                     {
-                        if (strcmp(temp3->insid, installmentid) == 0)
+                    	char id[50];
+                		strcpy(id , temp2 ->loanid);
+                        if (strcmp(temp3->insid, strcat(strcat(id,"I"),installmentid)) == 0)
                         {
                             temp3->ispaid = 1;
                             temp->totaldebt -= temp3->amount;
                         }
+                        if(strcmp("ALL" , installmentid )==0){
+                        	temp3->ispaid = 1;
+                            temp->totaldebt -= temp3->amount;
+						}
                         temp3 = temp3->nextins;
                     }
                 }
@@ -347,7 +353,7 @@ void findUnpaidInstallments(customer *customers){
             installment *temp3 = temp2->insptr;
             while (temp3 != NULL)
             {
-                if (strcmp(temp3->installmentdate, date) < 0 && temp3->ispaid == 0)
+                if (strcmp(temp3->installmentdate, date) != 0 && temp3->ispaid ==0)
                 {
                     temp3->ispaid = 2;
                 }
@@ -386,32 +392,47 @@ void findUnpaidInstallments(customer *customers){
 }
 
 
-
-void deletePaidInstallments(customer *customers)
+// function deletePaidInstallments, if a customer has no loan then delete his loans
+void deletePaidInstallments(customer *temp)
 {
-    customer *temp = customers;
-    while (temp != NULL)
+    loan *temp2 = temp->loanptr;
+    while (temp2 != NULL)
     {
-        loan *temp2 = temp->loanptr;
-        while (temp2 != NULL)
+        installment *temp3 = temp2->insptr;
+        while (temp3 != NULL)
         {
-            installment *temp3 = temp2->insptr;
-            while (temp3 != NULL)
+            if (temp3->ispaid == 1)
             {
-                if (temp3->ispaid == 1)
-                {
-                    installment *temp4 = temp3;
-                    temp3 = temp3->nextins;
-                    free(temp4);
-                }
-                else
-                {
-                    temp3 = temp3->nextins;
-                }
+                temp3->ispaid = 3;
             }
-            temp2 = temp2->nextloan;
+            temp3 = temp3->nextins;
         }
-        temp = temp->nextcust;
+        temp2 = temp2->nextloan;
+    }
+    temp2 = temp->loanptr;
+    while (temp2 != NULL)
+    {
+        installment *temp3 = temp2->insptr;
+        while (temp3 != NULL)
+        {
+            if (temp3->ispaid == 3)
+            {
+                temp2->insptr = temp3->nextins;
+                free(temp3);
+            }
+            temp3 = temp3->nextins;
+        }
+        temp2 = temp2->nextloan;
+    }
+    temp2 = temp->loanptr;
+    while (temp2 != NULL)
+    {
+        if (temp2->insptr == NULL)
+        {
+            temp->loanptr = temp2->nextloan;
+            free(temp2);
+        }
+        temp2 = temp2->nextloan;
     }
 }
 
@@ -472,7 +493,7 @@ int main()
             break;
         case 9:
             // deletePaidInstallments function call here
-            deletePaidInstallments(customers);
+            deletePaidInstallments(&customers);
             break;
         case 0:
             break;
