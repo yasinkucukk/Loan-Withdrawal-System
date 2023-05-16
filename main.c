@@ -35,7 +35,7 @@ typedef struct customer
 
 void readCustomers(customer **customers)
 {
-    FILE *fp = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\customers.txt", "r");
+    FILE *fp = fopen("customers.txt", "r");
     if (fp == NULL)
     {
         printf("File could not be opened\n");
@@ -73,7 +73,7 @@ void readCustomers(customer **customers)
 
 void readLoans(customer **customers)
 {
-    FILE *fp = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\loans.txt", "r");
+    FILE *fp = fopen("loans.txt", "r");
     if (fp == NULL)
     {
         printf("File could not be opened\n");
@@ -142,74 +142,42 @@ void readLoans(customer **customers)
     }
 }
 
-void printInstallments(customer *customers)
+void printCustomers(customer *customers, FILE *file)
 {
+
     while (customers != NULL)
     {
+
+        // Print customer information including ID, name, surname, customertype, and totaldebt
         printf("-----------------------------------------------\n");
-        printf("%d - %s %s - type: %s - total debt: %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+        fprintf(file, "-----------------------------------------------\n");
 
-        loan *temp = customers->loanptr; // Pointer to traverse the loans
-
-        while (temp != NULL)
-        {
-            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
-
-            installment *temp2 = temp->insptr; // Pointer to traverse the installments
-
-            while (temp2 != NULL)
-            {
-                printf("\t\t%s -> %s - %.2f - ", temp2->insid, temp2->installmentdate, temp2->amount);
-
-                if (temp2->ispaid == 0)
-                {
-                    printf("To be Paid\n");
-                }
-                else if (temp2->ispaid == 1)
-                {
-                    printf("Paid\n");
-                }
-                else
-                {
-                    printf("Delayed Payment\n");
-                }
-
-                temp2 = temp2->nextins; // Move to the next installment
-            }
-
-            temp = temp->nextloan; // Move to the next loan
-        }
+        printf("%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+        fprintf(file, "%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
 
         customers = customers->nextcust; // Move to the next customer
     }
 }
 
-void printCustomers(customer *customers)
+void printLoans(customer *customers, FILE *file)
 {
+
     while (customers != NULL)
     {
-        printf("-----------------------------------------------\n");
-        printf("%d - %s %s - type : %s - total debt : %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
-        // Print customer information including ID, name, surname, customertype, and totaldebt
 
-        customers = customers->nextcust; // Move to the next customer
-    }
-}
-
-void printLoans(customer *customers)
-{
-    while (customers != NULL)
-    {
-        printf("-----------------------------------------------\n");
-        printf("%d - %s %s - type : %s - total debt : %d\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
         // Print customer information including ID, name, surname, customertype, and totaldebt
+        printf("-----------------------------------------------\n");
+        printf("%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+
+        fprintf(file, "-----------------------------------------------\n");
+        fprintf(file, "%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
 
         loan *temp = customers->loanptr; // Pointer to traverse the loans
-
         while (temp != NULL)
         {
-            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
             // Print loan information including loan ID, type, total amount, process date, and total installment number
+            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
+            fprintf(file, "\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
 
             temp = temp->nextloan; // Move to the next loan
         }
@@ -238,11 +206,11 @@ void createInstallments(customer *customers)
             int year = atoi(token);                         // Extract year value from token
             int totaldays = 30 * temp->totalinstallmentnum; // Calculate total number of days for the installment period
 
-            while (day <= totaldays) // Loop until all installments for the loan are created
+            while (day <= totaldays)
             {
-                if (temp->insptr == NULL) // If the installment list is empty, create the first installment record
+                if (temp->insptr == NULL)
                 {
-                    temp->insptr = (installment *)malloc(sizeof(installment)); // Allocate memory for the installment record
+                    temp->insptr = (installment *)malloc(sizeof(installment));
                     char id[50];
                     strcpy(id, temp->loanid);
                     strcpy(temp->insptr->insid, strcat(strcat(id, "I"), itoa(count, countStr, 10))); // Generate installment ID using the loan ID and the counter
@@ -254,13 +222,14 @@ void createInstallments(customer *customers)
                 else
                 {
                     installment *temp2 = temp->insptr;
+
                     while (temp2->nextins != NULL) // Traverse to the last installment record
                     {
                         temp2 = temp2->nextins;
                     }
 
-                    count++;                                                     // Increment the installment counter
-                    temp2->nextins = (installment *)malloc(sizeof(installment)); // Allocate memory for the new installment record
+                    count++;
+                    temp2->nextins = (installment *)malloc(sizeof(installment));
                     char id[50];
                     strcpy(id, temp->loanid);
                     strcpy(temp2->nextins->insid, strcat(strcat(id, "I"), itoa(count, countStr, 10))); // Generate installment ID using the loan ID and the counter
@@ -290,18 +259,65 @@ void createInstallments(customer *customers)
     }
 }
 
+void printInstallments(customer *customers, FILE *file)
+{
+
+    while (customers != NULL)
+    {
+        printf("-----------------------------------------------\n");
+        printf("%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+
+        fprintf(file, "-----------------------------------------------\n");
+        fprintf(file, "%d - %s %s - type : %s - total debt : %.lf\n", customers->customerid, customers->name, customers->surname, customers->customertype, customers->totaldebt);
+
+        loan *temp = customers->loanptr; // Pointer to traverse the loans
+
+        while (temp != NULL)
+        {
+            printf("\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
+            fprintf(file, "\t%s : %s - %.2f - %s - %d\n", temp->loanid, temp->type, temp->totalamount, temp->processdate, temp->totalinstallmentnum);
+
+            installment *temp2 = temp->insptr; // Pointer to traverse the installments
+
+            while (temp2 != NULL)
+            {
+                printf("\t\t%s -> %s - %.2f - ", temp2->insid, temp2->installmentdate, temp2->amount);
+                fprintf(file, "\t\t%s -> %s - %.2f - ", temp2->insid, temp2->installmentdate, temp2->amount);
+
+                if (temp2->ispaid == 0)
+                {
+                    printf("To be Paid\n");
+                    fprintf(file, "To be Paid\n");
+                }
+                else if (temp2->ispaid == 1)
+                {
+                    printf("Paid\n");
+                    fprintf(file, "Paid\n");
+                }
+                else
+                {
+                    printf("Delayed Payment\n");
+                    fprintf(file, "Delayed Payment\n");
+                }
+                temp2 = temp2->nextins; // Move to the next installment
+            }
+            temp = temp->nextloan; // Move to the next loan
+        }
+        customers = customers->nextcust; // Move to the next customer
+    }
+}
+
 void readPayments(customer *customers)
 {
 
     FILE *fptr;
-    fptr = fopen("C:\\Users\\yasin\\Desktop\\Data project1\\payments.txt", "r");
+    fptr = fopen("payments.txt", "r");
 
     if (fptr == NULL)
     {
-        printf("File could not be opened\n");
+        printf("File could not be opened");
         exit(1);
     }
-
     char loanid[50];
     char installmentid[50];
 
@@ -338,7 +354,6 @@ void readPayments(customer *customers)
                             temp3->ispaid = 1;
                             temp->totaldebt -= temp3->amount;
                         }
-
                         temp3 = temp3->nextins;
                     }
                 }
@@ -349,24 +364,35 @@ void readPayments(customer *customers)
     }
     fclose(fptr);
 }
-void findUnpaidInstallments(customer *customers)
+
+void findUnpaidInstallments(customer *customers, FILE *file)
 {
+
     // Prompt the user to enter a date
     char date[20];
     printf("Enter a date: ");
+    fprintf(file, "Enter a date: ");
+
     scanf("%s", date);
+    fprintf(file, "%s\n", date);
+
     // Iterate through each customer
     customer *temp = customers;
+
     while (temp != NULL)
     {
+
         // Iterate through each loan of the customer
         loan *temp2 = temp->loanptr;
+
         while (temp2 != NULL)
         {
             // Iterate through each installment of the loan
             installment *temp3 = temp2->insptr;
+
             while (temp3 != NULL)
             {
+
                 // Check if the installment date is different from the input date and is still unpaid
                 if (strcmp(temp3->installmentdate, date) != 0 && temp3->ispaid == 0)
                 {
@@ -382,18 +408,23 @@ void findUnpaidInstallments(customer *customers)
 
     // Iterate through each customer again to calculate total debt and count delayed installments
     temp = customers;
+
     while (temp != NULL)
     {
+
         // Iterate through each loan of the customer
         loan *temp2 = temp->loanptr;
         float debt = 0;
         int count = 0;
         while (temp2 != NULL)
         {
+
             // Iterate through each installment of the loan
             installment *temp3 = temp2->insptr;
+
             while (temp3 != NULL)
             {
+
                 // Check if the installment is marked as delayed
                 if (temp3->ispaid == 2)
                 {
@@ -409,129 +440,168 @@ void findUnpaidInstallments(customer *customers)
         if (count != 0)
         {
             printf("%s %s : Debt %.2f Number of Delayed Installments %d\n", temp->name, temp->surname, debt, count);
+            fprintf(file, "%s %s : Debt %.2f Number of Delayed Installments %d\n", temp->name, temp->surname, debt, count);
         }
         temp = temp->nextcust;
     }
 }
 
-void deletePaidInstallments(customer *temp)
+void deletePaidInstallments(customer *customers)
 {
-    // Iterate through each loan of the customer
-    loan *temp2 = temp->loanptr;
-    while (temp2 != NULL)
-    {
-        // Iterate through each installment of the loan
-        installment *temp3 = temp2->insptr;
-        while (temp3 != NULL)
-        {
-            // Check if the installment has been paid
-            if (temp3->ispaid == 1)
-            {
-                // Mark the installment as to-be-deleted
-                temp3->ispaid = 3;
-            }
-            temp3 = temp3->nextins;
-        }
-        temp2 = temp2->nextloan;
-    }
-    // Delete the marked installments from the linked list
-    temp2 = temp->loanptr;
-    while (temp2 != NULL)
-    {
-        // Iterate through each installment of the loan
-        installment *temp3 = temp2->insptr;
-        while (temp3 != NULL)
-        {
-            // Check if the installment is marked as to-be-deleted
-            if (temp3->ispaid == 3)
-            {
-                // Adjust the pointers and free the memory
-                temp2->insptr = temp3->nextins;
-                free(temp3);
-            }
-            temp3 = temp3->nextins;
-        }
-        temp2 = temp2->nextloan;
-    }
 
-    // Delete loans with no remaining installments from the linked list
-    temp2 = temp->loanptr;
-    while (temp2 != NULL)
+    // Iterate through each loan of the customer
+    customer *temp = customers;
+    while (temp != NULL)
     {
-        // Check if the loan has no installments
-        if (temp2->insptr == NULL)
+        loan *temp2 = temp->loanptr;
+        while (temp2 != NULL)
         {
-            // Adjust the pointers and free the memory
-            temp->loanptr = temp2->nextloan;
-            free(temp2);
+            // Iterate through each installment of the loan
+            installment *temp3 = temp2->insptr;
+            while (temp3 != NULL)
+            {
+
+                // Check if the installment has been paid
+                if (temp3->ispaid == 1)
+                {
+                    // Mark the installment as to-be-deleted
+                    temp3->ispaid = 3;
+                }
+                temp3 = temp3->nextins;
+            }
+            temp2 = temp2->nextloan;
         }
-        temp2 = temp2->nextloan;
+        temp = temp->nextcust;
+    }
+    temp = customers;
+    while (temp != NULL)
+    {
+        loan *temp2 = temp->loanptr;
+        while (temp2 != NULL)
+        {
+            installment *temp3 = temp2->insptr;
+            while (temp3 != NULL)
+            {
+                if (temp3->ispaid == 3)
+                {
+                    installment *temp4 = temp2->insptr;
+                    if (temp4 == temp3)
+                    {
+                        temp2->insptr = temp3->nextins;
+                        free(temp3);
+                        temp3 = temp2->insptr;
+                    }
+                    else
+                    {
+                        while (temp4->nextins != temp3)
+                        {
+                            temp4 = temp4->nextins;
+                        }
+                        temp4->nextins = temp3->nextins;
+                        free(temp3);
+                        temp3 = temp4->nextins;
+                    }
+                }
+                else
+                {
+                    temp3 = temp3->nextins;
+                }
+            }
+            temp2 = temp2->nextloan;
+        }
+        temp = temp->nextcust;
     }
 }
 
 int main()
 {
-    customer *customers = NULL;
-    int option = 1000;
-    while (option != 0)
+    FILE *file = fopen("output.txt", "w");
+    if (file != NULL)
     {
-        printf("\n\n#############################################################\n");
-        printf("1. read customers.\n");
-        printf("2. print customers.\n");
-        printf("3. read loans.\n");
-        printf("4. print loans.\n");
-        printf("5. create installments.\n");
-        printf("6. print installments.\n");
-        printf("7. read payments.\n");
-        printf("8. find unpaid installments.\n");
-        printf("9. delete completely paid installments.\n");
-        printf("please select your option : \n");
-        scanf("%d", &option);
-        printf("#############################################################\n");
 
-        switch (option)
+        customer *customers = NULL;
+        int option = 1000;
+        while (option != 0)
         {
-        case 1:
-            // readCustomers function call here
-            readCustomers(&customers);
-            break;
-        case 2:
-            // printCustomers function call here
-            printCustomers(customers);
-            break;
-        case 3:
-            // readLoans function call here
-            readLoans(&customers);
-            break;
-        case 4:
-            // printLoans function call here
-            printLoans(customers);
-            break;
-        case 5:
-            // createInstallments function call here
-            createInstallments(customers);
-            break;
-        case 6:
-            // printInstallments function call here
-            printInstallments(customers);
-            break;
-        case 7:
-            // readPayments function call here
-            readPayments(customers);
-            break;
-        case 8:
-            // findUnpaidInstallments function call here
-            findUnpaidInstallments(customers);
-            break;
-        case 9:
-            // deletePaidInstallments function call here
-            deletePaidInstallments(&customers);
-            break;
-        case 0:
-            break;
-        default:
-            printf("invalid option\n");
+            printf("\n\n#############################################################\n");
+            printf("1. read customers.\n");
+            printf("2. print customers.\n");
+            printf("3. read loans.\n");
+            printf("4. print loans.\n");
+            printf("5. create installments.\n");
+            printf("6. print installments.\n");
+            printf("7. read payments.\n");
+            printf("8. find unpaid installments.\n");
+            printf("9. delete completely paid installments.\n");
+            printf("please select your option : \n");
+            scanf("%d", &option);
+            printf("#############################################################\n");
+
+            fprintf(file, "\n\n#############################################################\n");
+            fprintf(file, "1. read customers.\n");
+            fprintf(file, "2. print customers.\n");
+            fprintf(file, "3. read loans.\n");
+            fprintf(file, "4. print loans.\n");
+            fprintf(file, "5. create installments.\n");
+            fprintf(file, "6. print installments.\n");
+            fprintf(file, "7. read payments.\n");
+            fprintf(file, "8. find unpaid installments.\n");
+            fprintf(file, "9. delete completely paid installments.\n");
+            fprintf(file, "please select your option : \n");
+            fprintf(file, "%d\n", option);
+            fprintf(file, "#############################################################\n");
+
+            switch (option)
+            {
+            case 1:
+                // readCustomers function call here
+                readCustomers(&customers);
+                break;
+            case 2:
+                // printCustomers function call here
+                printCustomers(customers, file);
+                break;
+            case 3:
+                // readLoans function call here
+                readLoans(&customers);
+                break;
+            case 4:
+                // printLoans function call here
+                printLoans(customers, file);
+                break;
+            case 5:
+                // createInstallments function call here
+                createInstallments(customers);
+                break;
+            case 6:
+                // printInstallments function call here
+                printInstallments(customers, file);
+                break;
+            case 7:
+                // readPayments function call here
+                readPayments(customers);
+                break;
+            case 8:
+                // findUnpaidInstallments function call here
+                findUnpaidInstallments(customers, file);
+                break;
+            case 9:
+                // deletePaidInstallments function call here
+                deletePaidInstallments(customers);
+                break;
+            case 0:
+                break;
+            default:
+                printf("invalid option\n");
+                fprintf(file, "invalid option\n");
+            }
         }
     }
+    else
+    {
+        printf("File could not be opened\n.\n");
+        fprintf(file, "File could not be opened\n.\n");
+    }
+    fclose(file);
     return 0;
 }
